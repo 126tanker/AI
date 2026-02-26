@@ -1,57 +1,1153 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>John Gilbert</title>
-
-    <!-- Embedded CSS -->
-    <style>
-        body {
-            font-family: Arial, Helvetica, sans-serif;
-            background-color: #f4f6f8;
-            margin: 0;
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .container {
-            text-align: center;
-            background: #ffffff;
-            padding: 40px;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        h1 {
-            margin: 0;
-            font-size: 2.5rem;
-        }
-
-        h2 {
-            margin-top: 0.5rem;
-            font-weight: normal;
-            color: #555;
-        }
-
-        button {
-            margin-top: 20px;
-            padding: 12px 24px;
-            font-size: 1rem;
-            border: none;
-            border-radius: 5px;
-            background-color: #1877f2; /* Facebook blue */
-            color: white;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background-color: #145dbf;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Academic Advisor Decision App - Enhanced (Electives + Planner)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      --primary:#1f3c88;
+      --bg:#f4f6f8;
+      --card:#ffffff;
+      --muted:#e9edf5;
+      --muted-hover:#d0daf0;
+      --accent:#2b66ff;
+      --success:#0f9d58;
+      --warn:#c27803;
+      --danger:#b00020;
+    }
+    html,body{height:100%}
+    body{font-family: Arial, sans-serif;margin: 0;background: var(--bg);color:#17223b;}
+    header{background: var(--primary);color:white;padding: 12px 18px;display:flex;align-items:center;gap:12px;flex-wrap: wrap;}
+    h1{margin:0;font-size:22px}
+    .app-actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+    .app-actions button{background:#ffffff1a;border:1px solid #ffffff3a;color:white;padding:6px 10px;border-radius:6px;cursor:pointer}
+    .app-actions button:hover{background:#ffffff2e}
+    #container{max-width: 980px; margin: 20px auto; padding: 12px;}
+    .progress{background:#e0e0e0;height:8px;border-radius:4px;margin-bottom:16px}
+    .progress-bar{height:100%;width:0%;background:var(--primary);border-radius:4px;transition:width .25s ease}
+    .card{background:var(--card);padding:20px;border-radius:10px;box-shadow:0 3px 10px rgba(0,0,0,.08)}
+    .question{font-size:18px;margin-bottom:14px}
+    .options button{display:block;width:100%;margin:8px 0;padding:12px;font-size:15px;border:none;border-radius:6px;cursor:pointer;background:var(--muted);transition:background .2s}
+    .options button:hover{background:var(--muted-hover)}
+    .summary{background:#eef3ff;padding:15px;margin-top:16px;border-left:5px solid var(--primary)}
+    .nav-controls{margin-top:16px;display:flex;gap:8px;justify-content:space-between;align-items:center}
+    .nav-controls .left{display:flex;gap:8px}
+    .nav-controls .right{display:flex;gap:8px}
+    .nav-controls button{padding:8px 12px}
+    .pill{display:inline-block;background:#eef3ff;border:1px solid #d0daf0;color:#1f2a44;padding:4px 8px;border-radius:999px;font-size:12px;margin:2px}
+    .section-title{margin:10px 0 6px;font-weight:bold}
+    .note{font-size:12px;color:#555}
+    .muted{color:#6b7280}
+    .error{color:var(--danger)}
+    /* Modal */
+    .modal{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;padding:20px;}
+    .modal[open]{display:flex}
+    .modal .modal-card{background:white;max-width:1000px;width:100%;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.25);} 
+    .modal header{background:transparent;color:#17223b;padding:16px;border-bottom:1px solid #eee}
+    .modal .content{padding:16px;max-height:70vh;overflow:auto}
+    .modal footer{padding:12px 16px;border-top:1px solid #eee;display:flex;gap:8px;justify-content:flex-end}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+    .field{display:flex;flex-direction:column;gap:4px}
+    .field input,.field select,.field textarea{padding:8px;border:1px solid #cfd8dc;border-radius:6px}
+    .kbd{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;background:#f1f5f9;border:1px solid #e2e8f0;border-bottom-width:2px;padding:1px 6px;border-radius:4px;font-size:12px}
+    details{background:#fafbff;border:1px solid #e6ecff;border-radius:8px;padding:10px;margin:8px 0}
+    details > summary{cursor:pointer;font-weight:bold}
+    .success{color:var(--success)}
+    .warn{color:var(--warn)}
+    .badge{display:inline-block;padding:2px 6px;border-radius:6px;background:#f1f5f9;border:1px solid #e2e8f0;font-size:11px;color:#334155;margin-left:6px}
+    .disabled{opacity:.5;pointer-events:none}
+    .course-card{border:1px solid #e5e7eb;border-radius:8px;padding:10px;margin:6px 0;background:#fff}
+    .course-card .title{font-weight:bold}
+    .course-card .meta{font-size:12px;color:#6b7280;margin-top:4px}
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media (max-width: 720px){ .two-col{grid-template-columns:1fr} }
+	
+	/* NEW: Hide the Select All Displayed button */
+button[data-role="hide-select-all"] {
+    display: none !important;
+}
+	
+  </style>
 </head>
-
 <body>
-    <main class="container">
-        <h1>John Gilbert</h1>
+<header>
+  <h1 id="appTitle">Academic Advising Decision Support Tool (Enhanced)</h1>
+  <div class="app-actions" aria-label="App actions">
+    <button id="btnRestart" title="Restart (Alt+R)">Restart</button>
+    <button id="btnSave" title="Save session (Alt+S)">Save</button>
+    <button id="btnLoad" title="Load session (Alt+L)">Load</button>
+    <button id="btnExport" title="Export summary to JSON (Alt+J)">Export JSON</button>
+    <button id="btnPrint" title="Print summary (Ctrl/Cmd+P)">Print</button>
+    <button id="btnPlacement" title="Open placement helper (Alt+P)">Placement Helper</button>
+  </div>
+</header>
+<div id="container">
+  <div class="progress" aria-hidden="true"><div class="progress-bar" id="progressBar"></div></div>
+  <div class="card" role="region" aria-labelledby="questionHeading">
+    <div class="question" id="questionText" aria-live="polite"></div>
+    <div class="options" id="optionsContainer" role="group" aria-label="Options"></div>
+    <div class="summary" id="summaryBox" style="display:none;"></div>
+    <div class="nav-controls">
+      <div class="left">
+        <button onclick="goBack()" id="btnBack" title="Go back (Alt+Left)">Back</button>
+        <button onclick="restart()" id="btnRestartInline">Restart</button>
+      </div>
+      <div class="right">
+        <span class="note">Tip: Use <span class="kbd">1</span>, <span class="kbd">2</span>, ... to choose options; <span class="kbd">B</span> to go Back.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Placement Helper Modal -->
+<dialog class="modal" id="placementModal">
+  <div class="modal-card">
+    <header>
+      <h2>Placement Helper</h2>
+      <p class="note">Enter any scores you have; leave others blank.</p>
+    </header>
+    <div class="content">
+      <div class="grid">
+        <div class="field"><label>High School GPA</label><input type="number" step="0.01" id="ph_gpa" placeholder="e.g., 3.2"></div>
+        <div class="field"><label>ACT Reading</label><input type="number" id="ph_act_read"></div>
+        <div class="field"><label>ACT English (Writing & Language)</label><input type="number" id="ph_act_eng"></div>
+        <div class="field"><label>ACT Math</label><input type="number" id="ph_act_math"></div>
+        <div class="field"><label>SAT Evidence-Based Reading & Writing</label><input type="number" id="ph_sat_ebrw"></div>
+        <div class="field"><label>SAT Writing & Language</label><input type="number" id="ph_sat_wl"></div>
+        <div class="field"><label>SAT Math</label><input type="number" id="ph_sat_math"></div>
+        <div class="field"><label>GED (if applicable)</label><input type="number" id="ph_ged"></div>
+        <div class="field"><label>Accuplacer (Reading/Writing)</label><input type="number" id="ph_acc_rw"></div>
+        <div class="field"><label>KYOTE College Algebra (CA)</label><input type="number" id="ph_kyote_ca"></div>
+        <div class="field"><label>KYOTE Math Placement (MP)</label><input type="number" id="ph_kyote_mp"></div>
+        <div class="field"><label>KYOTE KALG (CA - alternative)</label><input type="number" id="ph_kyote_kalg"></div>
+      </div>
+      <details open>
+        <summary>Results</summary>
+        <div id="placementResults"></div>
+      </details>
+    </div>
+    <footer>
+      <button onclick="document.getElementById('placementModal').close()">Close</button>
+      <button class="success" onclick="computePlacement()">Recompute</button>
+    </footer>
+  </div>
+</dialog>
+
+<!-- Course Planner Modal -->
+<dialog class="modal" id="plannerModal">
+  <div class="modal-card">
+    <header>
+      <h2>Plan Remaining Courses (Prereqs/Coreqs Enforced)</h2>
+      <label class="note"><input type="checkbox" id="planner_consent"> Allow instructor consent overrides when available</label>
+    </header>
+    <div class="content" id="plannerContent">
+      <!-- dynamically rendered -->
+    </div>
+    <footer>
+      <button onclick="document.getElementById('plannerModal').close()">Close</button>
+      <button class="success" onclick="applyPlannerSelections()">Save Plan</button>
+    </footer>
+  </div>
+</dialog>
+
+<script>
+// ================================
+// COURSE RULES (from user's catalog JSON) + Option B: approvedElectiveLevel
+// ================================
+const courseRules = {
+  "_meta": {"catalogYear": "unspecified (from pasted text)","source": "User-provided KCTCS CIT catalog excerpts","lastUpdated": "2026-02-15"},
+  "CIT 105":{"title":"Introduction to Computers","credits":3,"prereq":{"allOf":[{"anyOf":[{"placement":"Reading Coreq/Course"},{"standing":"12 college credits (GPA ≥ 2.0)"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":["CIT 105 Step Exam"],"equivalents":[],"consentAllowed":false},
+  "CIT 111":{"title":"Computer Hardware and Software","credits":4,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 105"}]},{"anyOf":[{"placement":"QR College-Ready"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":["A+"],"equivalents":[],"consentAllowed":true},
+  "CIT 120":{"title":"Computational Thinking","credits":3,"prereq":{"allOf":[{"anyOf":[{"placement":"QR College-Ready"}]}]},"coreq":{"anyOf":[{"course":"CIT 105"}],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 124":{"title":"Introduction to Game Development","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 105"},{"course":"IMD 100"}]}]},"coreq":{"anyOf":[{"course":"CIT 221"},{"course":"IMD 221"}],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 125":{"title":"Intro to Digital Maps","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 105"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 130":{"title":"Productivity Software","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 105"},{"course":"OST 105"},{"course":"IMD 100"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":["MOS Word+PowerPoint+Excel+Access (2019/365)"],"equivalents":[],"consentAllowed":true,"approvedElectiveLevel":"100"},
+  "CIT 140":{"title":"JavaScript I","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 120"}]},{"anyOf":[{"course":"CIT 150"},{"course":"CIT 155"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 142":{"title":"C++ I","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 120"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 143":{"title":"C# I","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 120"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 144":{"title":"Python I","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 120"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 146":{"title":"Swift I","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 120"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 148":{"title":"Visual Basic I","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 120"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 149":{"title":"Java I","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 120"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 150":{"title":"Internet Technologies","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 105"}]}]},"coreq":{"anyOf":[{"course":"CIT 120"}],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 151":{"title":"Social Media I","credits":3,"prereq":{"allOf":[{"anyOf":[{"placement":"Digital Literacy"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 152":{"title":"Social Media Tools and Technologies","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 150"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 155":{"title":"Web Page Development","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 105"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true,"approvedElectiveLevel":"100"},
+  "CIT 157":{"title":"Web Site Design and Production","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 105"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true,"approvedElectiveLevel":"100"},
+  "CIT 160":{"title":"Intro to Networking Concepts","credits":4,"prereq":{"allOf":[{"anyOf":[{"placement":"QR College-Ready"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":["Network+"],"equivalents":[],"consentAllowed":true},
+  "CIT 161":{"title":"Introduction to Networks","credits":4,"prereq":{"allOf":[{"anyOf":[{"placement":"QR College-Ready"}]}]},"coreq":{"anyOf":[{"course":"CIT 111"}],"allOf":[]},"satisfiedBy":["CCNA"],"equivalents":[],"consentAllowed":true},
+  "CIT 167":{"title":"Switching &amp; Routing Essentials","credits":4,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 161"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":["CCNA"],"equivalents":[],"consentAllowed":true,"approvedElectiveLevel":"100"},
+  "CIT 170":{"title":"Database Design Fundamentals","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 105"},{"course":"OST 105"},{"course":"IMD 100"}]},{"anyOf":[{"placement":"QR College-Ready"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 171":{"title":"SQL I","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 120"}]},{"anyOf":[{"course":"CIT 170"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true,"approvedElectiveLevel":"100"},
+  "CIT 180":{"title":"Security Fundamentals","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 160"},{"course":"CIT 161"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":["Security+"],"equivalents":[],"consentAllowed":true},
+  "CIT 182":{"title":"Perimeter Defense","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 180"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true,"approvedElectiveLevel":"200"},
+  "CIT 184":{"title":"Attacks and Exploits","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 180"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":["CEH"],"equivalents":[],"consentAllowed":true,"approvedElectiveLevel":"200"},
+  "CIT 201":{"title":"Information Storage Management","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 167"}]},{"anyOf":[{"course":"CIT 214"},{"course":"CIT 217"},{"course":"CIT 262"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 203":{"title":"Introduction to Virtualization","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 167"}]},{"anyOf":[{"course":"CIT 214"},{"course":"CIT 217"},{"course":"CIT 262"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 204":{"title":"VMware Optimize and Scale","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 203"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 205":{"title":"Cloud Infrastructure and Services","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 201"}]},{"anyOf":[{"course":"CIT 203"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 206":{"title":"Amazon Web Services Practitioner","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 170"}]},{"anyOf":[{"course":"CIT 161"},{"course":"CIT 160"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 207":{"title":"Amazon Web Services Architecting","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 206"}]}]},"coreq":{"anyOf":[],"allOf":[{"course":"CIT 227"},{"course":"CIT 262"}]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 208":{"title":"AWS Systems Operations","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 206"}]}]},"coreq":{"anyOf":[],"allOf":[{"course":"CIT 227"},{"course":"CIT 262"}]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 212":{"title":"Connecting and Scaling Networks","credits":4,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 167"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":["CCNA"],"equivalents":[],"consentAllowed":true,"approvedElectiveLevel":"200"},
+  "CIT 213":{"title":"Microsoft Client Configuration","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 111"}]},{"anyOf":[{"course":"CIT 160"},{"course":"CIT 161"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 217":{"title":"UNIX/Linux Administration","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 111"}]},{"anyOf":[{"course":"CIT 160"},{"course":"CIT 161"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":["Linux+"],"equivalents":[],"consentAllowed":true},
+  "CIT 219":{"title":"Internet Protocols","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 160"},{"course":"CIT 161"},{"course":"CIT 162"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 221":{"title":"Computer Graphics","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 105"},{"course":"IMD 100"}]}]},"coreq":{"anyOf":[{"course":"CIT 124"},{"course":"IMD 124"}],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 222":{"title":"3D Modeling for Video Games","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 221"},{"course":"IMD 221"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 223":{"title":"3D Animation for Video Games","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 124"},{"course":"IMD 124"}]},{"anyOf":[{"course":"CIT 222"},{"course":"IMD 222"}]}]},"coreq":{"anyOf":[{"course":"CIT 273"},{"course":"IMD 273"}],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 225":{"title":"GIS Data Analysis","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 125"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 227":{"title":"Introduction to UNIX/Linux Administration","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 111"}]},{"anyOf":[{"token":"Approved Level I Networking Course"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":["Red Hat"],"equivalents":[],"consentAllowed":true,"approvedElectiveLevel":"200"},
+  "CIT 228":{"title":"Advanced UNIX/Linux Administration","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 227"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 229":{"title":"Selected Topics in GIS","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 125"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 232":{"title":"Help Desk Operations","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 111"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true,"approvedElectiveLevel":"200"},
+  "CIT 234":{"title":"Advanced Productivity Software","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 130"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 236":{"title":"Adv Data Organization Software","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 130"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 237":{"title":"iOS Programming","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 146"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 238":{"title":"Android Programming I","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 149"},{"course":"INF 120"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 242":{"title":"C++ II","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 142"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 243":{"title":"C# II","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 143"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 244":{"title":"Python II","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 144"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true,"approvedElectiveLevel":"200"},
+  "CIT 248":{"title":"Visual Basic II","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 148"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 249":{"title":"Java II","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 149"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 251":{"title":"Social Media II","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 151"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 253":{"title":"Data Driven Web Pages: (Topic)","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 150"},{"course":"CIT 155"},{"course":"CIT 157"}]},{"anyOf":[{"course":"CIT 170"}]},{"anyOf":[{"token":"Approved Level I Programming Language"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 255":{"title":"Web Server Administration","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 150"},{"course":"CIT 155"},{"course":"CIT 157"}]},{"anyOf":[{"course":"CIT 214"},{"course":"CIT 228"},{"course":"CIT 262"}]},{"anyOf":[{"course":"CIT 219"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 257":{"title":"Applied Internet Technologies","credits":3,"prereq":{"allOf":[]},"coreq":{"anyOf":[{"course":"CIT 253"},{"course":"CIT 255"}],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 258":{"title":"Internet Technologies Seminar","credits":3,"prereq":{"allOf":[]},"coreq":{"anyOf":[{"course":"CIT 253"},{"course":"CIT 255"}],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 260":{"title":"Network Hardware Installation and Troubleshooting","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 160"},{"course":"CIT 161"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 261":{"title":"MS Active Directory Services","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 111"}]},{"anyOf":[{"course":"CIT 160"},{"course":"CIT 161"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 262":{"title":"MS Network Infrastructure","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 111"}]},{"anyOf":[{"course":"CIT 160"},{"course":"CIT 161"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 264":{"title":"Microsoft Server Management","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 262"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 267":{"title":"UNIX/Linux Network Services","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 228"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 270":{"title":"Microsoft 365 Endpoint Administration","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 160"},{"course":"CIT 161"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true,"approvedElectiveLevel":"200"},
+  "CIT 271":{"title":"SQL II","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 171"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 273":{"title":"Game Production","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 124"},{"course":"IMD 124"}]},{"anyOf":[{"course":"CIT 222"},{"course":"IMD 222"}]}]},"coreq":{"anyOf":[{"course":"CIT 223"},{"course":"IMD 223"}],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 274":{"title":"Seminar in Game Development","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 223"},{"course":"IMD 223"}]},{"anyOf":[{"course":"CIT 273"},{"course":"IMD 273"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 275":{"title":"Administering Windows Server Hybrid Core Infrastructure","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 160"},{"course":"CIT 161"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 279":{"title":"Configuring Windows Server Hybrid Advanced Services","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 275"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 284":{"title":"Computer Forensics","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 180"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":["Security+"],"equivalents":[],"consentAllowed":true,"approvedElectiveLevel":"200"},
+  "CIT 286":{"title":"UNIX/Linux OS Security","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 180"}]},{"anyOf":[{"course":"CIT 228"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":["Linux+"],"equivalents":[],"consentAllowed":true},
+  "CIT 287":{"title":"Cisco OS Security","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 167"},{"course":"CIT 212"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":["CCNA"],"equivalents":[],"consentAllowed":true},
+  "CIT 288":{"title":"Network Security","credits":3,"prereq":{"allOf":[{"anyOf":[{"course":"CIT 180"}]},{"anyOf":[{"token":"Level 1 Network Technologies Specialization Sequence"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 290":{"title":"Internship","credits":3,"prereq":{"allOf":[]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true,"approvedElectiveLevel":"200"},
+  "CIT 291":{"title":"CIT Capstone","credits":3,"prereq":{"allOf":[{"anyOf":[{"standing":"36+ CIT credits"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 293":{"title":"CIT Employability Studies","credits":1,"prereq":{"allOf":[{"anyOf":[{"standing":"Sophomore Standing"}]},{"anyOf":[{"standing":"18+ CIT credits"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 295":{"title":"Independent Problems in CIT: Topic","credits":1,"prereq":{"allOf":[]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 297":{"title":"CIT Professional Preparation","credits":3,"prereq":{"allOf":[{"anyOf":[{"standing":"Sophomore Standing"}]},{"anyOf":[{"standing":"18+ CIT credits"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 299":{"title":"Special Topics in CIT: (Topic)","credits":1,"prereq":{"allOf":[]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true},
+  "CIT 1051":{"title":"Computer Basics (module)","credits":0.5,"prereq":{"allOf":[{"anyOf":[{"placement":"RDG 20"}]}]},"coreq":{"anyOf":[],"allOf":[]},"satisfiedBy":[],"equivalents":[],"consentAllowed":true}
+};
+
+// ================================
+// STUDENT PROFILE OBJECT
+// ================================
+let studentProfile = {
+  program: "Computer & Information Technologies AAS",
+  track: null,
+  credits: null,
+  transferStudent: null,
+  remedial: null,
+  needsMajorUpdate: null,
+  hasHold: null,
+  completedCourses: [],
+  generalEducationCourses: {},
+  certifications: [], // NEW
+  creditedCourses: [], // NEW (derived from certifications)
+  plannedCourses: [], // NEW
+  electiveSelections: {} // NEW: maps placeholder => selected course codes
+};
+
+// ================================
+// COURSE CATALOG BY TRACK (preserved)
+// ================================
+const courseCatalog = {
+  "General": {
+    required: [
+      "CIT 105",
+      "CIT 111",
+      "CIT 120",
+      "CIT 170",
+      "CIT 180",
+      "CIT 160/161",
+      "CIT 144 or 171",
+      "CIT 290 or 297"
+    ],
+    trackSpecific: [
+      "CIT Elective",
+      "CIT Elective",
+      "CIT Elective",
+      "200-Level CIT Elective",
+      "200-Level CIT Elective",
+      "200-Level CIT Elective",
+      "200-Level CIT Elective"
+    ],
+    generalEducation: [
+      "College Writing I",
+      "Qualitative Reasoning",
+      "Social and Behavioral Sciences",
+      "Natural Sciences",
+      "Heritage and Humanities (Arts and Humanities)"
+    ]
+  },
+  "Information Security": {
+    required: [
+      "CIT 105",
+      "CIT 111",
+      "CIT 120",
+      "CIT 170",
+      "CIT 180",
+      "CIT 161",
+      "CIT 144",
+      "CIT 290 or 297"
+    ],
+    trackSpecific: [
+      "CIT 182",
+      "CIT 184",
+      "CIT 227",
+      "CIT 167",
+      "CIT 212",
+      "CIT 284",
+      "CIT Elective (Approved CIT Technical Course)"
+    ],
+    generalEducation: [
+      "College Writing I",
+      "Qualitative Reasoning",
+      "Social and Behavioral Sciences",
+      "Natural Sciences",
+      "Heritage and Humanities (Arts and Humanities)"
+    ]
+  },
+  "Internet Technologies": {
+    required: [
+      "CIT 105",
+      "CIT 111",
+      "CIT 120",
+      "CIT 170",
+      "CIT 180",
+      "CIT 161",
+      "CIT 140",
+      "CIT 290 or 297"
+    ],
+    trackSpecific: [
+      "CIT 155",
+      "CIT 157 or CIT 150",
+      "CIT 171",
+      "CIT 253",
+      "CIT 257 or CIT 258",
+      "Approved Level I Programming (CIT 144 Python I @ SKYCTC)",
+      "Approved Level II Programming (CIT 244 Python II @ SKYCTC)"
+    ],
+    generalEducation: [
+      "College Writing I",
+      "Qualitative Reasoning",
+      "Social and Behavioral Sciences",
+      "Natural Sciences",
+      "Heritage and Humanities (Arts and Humanities)"
+    ]
+  },
+  "Network Administration": {
+    required: [
+      "CIT 105",
+      "CIT 111",
+      "CIT 120",
+      "CIT 170",
+      "CIT 180",
+      "CIT 161",
+      "CIT 144 or 171",
+      "CIT 290 or 297"
+    ],
+    trackSpecific: [
+      "CIT 167",
+      "CIT 212",
+      "CIT 227",
+      "CIT Elective",
+      "CIT Elective",
+      "CIT Elective",
+      "CIT Elective"
+    ],
+    generalEducation: [
+      "College Writing I",
+      "Qualitative Reasoning",
+      "Social and Behavioral Sciences",
+      "Natural Sciences",
+      "Heritage and Humanities (Arts and Humanities)"
+    ]
+  }
+};
+
+// ================================
+// Industry Certification -> Course Credit Map (preserved)
+// ================================
+const certificationCreditMap = {
+  "iC3": ["CIT 95 (Digital Literacy Competency Only)"] ,
+  "CIT 105 Step Exam": ["CIT 105"],
+  "A+": ["CIT 111"],
+  "MOS Word+PowerPoint+Excel+Access (2019/365)": ["CIT 130"],
+  "Network+": ["CIT 160"],
+  "CCNA": ["CIT 161","CIT 167","CIT 212"],
+  "Security+": ["CIT 180"],
+  "CEH": ["CIT 184"],
+  "Linux+": ["CIT 217"],
+  "Red Hat": ["CIT 227"]
+};
+
+// Build approved electives lists from courseRules (Option B)
+const approvedElectivesByLevel = {"100": [], "200": []};
+Object.keys(courseRules).forEach(k=>{
+  const r = courseRules[k];
+  if(r && r.approvedElectiveLevel){ approvedElectivesByLevel[r.approvedElectiveLevel].push(k); }
+});
+
+// ================================
+// DECISION TREE STRUCTURE (preserved)
+// ================================
+const decisionTree = {
+  start: {
+    question: "Pre-Advising System Verification",
+    options: [ { text: "Begin System Review", next: "systemInstructions" } ]
+  },
+  systemInstructions: {
+    question:
+      "Step 1) Retrieve student's PeopleSoft ID Number (PS Number / Student ID):\n\n" +
+      "Navigate to:\n" +
+      "My Path > Student Self-Service (PeopleSoft Campus Solutions) > My Advisees.\n\n" +
+      "Locate and record the student’s PS Number.\n\n" +
+      "Step 2) Check student's current enrollment status and registered courses:\n\n" +
+      "Navigate to:\n" +
+      "My Path > Student Self-Service (PeopleSoft Campus Solutions) > Classic Home > My Favorites > PS Student Information.\n\n" +
+      "Enter the PS Number in the ID field and click Search.\n\n" +
+      "Review:\n" +
+      "- Current term enrollment status\n" +
+      "- Registered courses\n" +
+      "- Academic program/plan information displayed",
+    options: [
+      { text: "System Review Complete – Continue", next: "majorCheck" },
+      { text: "Open Placement Helper", next: "systemInstructions", action: () => openPlacementHelper() }
+    ]
+  },
+  // MAJOR / TRACK CHECK
+  majorCheck: {
+    question:
+      "Does the student need to be enrolled in the CIT Major (Plan) and/or one of the Tracks (Sub-Plan)?",
+    options: [
+      { text: "Yes", next: "majorUpdateInstructions", set: { needsMajorUpdate: true } },
+      { text: "No", next: "trackSelection", set: { needsMajorUpdate: false } }
+    ]
+  },
+  majorUpdateInstructions: {
+    question:
+      "Go to My Path > Student Self-Service (PeopleSoft Campus Solutions) > Change Major/Requirement Term.\n\n" +
+      "Enter Student ID (PS number) and select term.\n\n" +
+      "Leave 'Requirement Term Change' unselected.\n\n" +
+      "Select:\n" +
+      "- Program of Study: Computer and Information Technologies\n" +
+      "- Academic Plan: Computer and Information Tech (Associate in Applied Science)\n\n" +
+      "Select appropriate Academic Sub-Plan (Track).\n\n" +
+      "This generates an email requiring student approval.\n\n" +
+      "Notify the Division Administrative Assistant to update assigned advisor if necessary.",
+    options: [ { text: "Major/Track Update Submitted – Continue", next: "holdCheck" } ]
+  },
+  // HOLD CHECK
+  holdCheck: {
+    question:
+      "Does the student have a HOLD (negative service indicator — red circle with line icon)?",
+    options: [
+      { text: "Yes", next: "holdInstructions", set: { hasHold: true } },
+      { text: "No", next: "trackSelection", set: { hasHold: false } }
+    ]
+  },
+  holdInstructions: {
+    question:
+      "Click the red service indicator icon.\n\n" +
+      "On Manage Service Indicators page:\n" +
+      "- Check Start Term.\n" +
+      "- If not applicable to current term, you may continue.\n\n" +
+      "If applicable:\n" +
+      "- Click Code field to open View Service Indicator.\n" +
+      "- Read Description box and Services Impacted section.\n\n" +
+      "Notify student to resolve issue:\n\n" +
+      "1) Transcript Hold → Review:\nhttps://southcentral.kctcs.edu/current-students/academic-resources/transcripts.aspx\nContact: SKY-Admission@kctcs.edu\n\n" +
+      "2) Financial Aid Hold → Contact:\n southcentral-financialaid@kctcs.edu\n\n" +
+      "3) Academic Hold → Contact:\n SKY-Admission@kctcs.edu",
+    options: [ { text: "Hold Addressed / Instructions Given – Continue", next: "trackSelection" } ]
+  },
+  // TRACK SELECTION
+  trackSelection: {
+    question: "Select the CIT AAS Track:",
+    options: [
+      { text: "Information Security", next: "trackCourseInput", set: { track: "Information Security" } },
+      { text: "General", next: "trackCourseInput", set: { track: "General" } },
+      { text: "Network Administration", next: "trackCourseInput", set: { track: "Network Administration" } },
+      { text: "Internet Technologies", next: "trackCourseInput", set: { track: "Internet Technologies" } }
+    ]
+  },
+  trackCourseInput: { question: "Select all courses the student has completed for the selected track.", options: [] },
+  credits: { question: "How many credit hours has the student completed?", options: [
+    { text: "0-15 (First Semester)", next: "end", set: { credits: "0-15" } },
+    { text: "16-45 (Mid Program)", next: "end", set: { credits: "16-45" } },
+    { text: "46+ (Final Year)", next: "end", set: { credits: "46+" } }
+  ]},
+  end: { question: "Advising Recommendation Summary", options: [] }
+};
+
+// ================================
+// NAVIGATION ENGINE (preserved + keyboard & actions)
+// ================================
+let historyStack = [];
+let currentNode = "start";
+function renderNode(nodeKey){
+  const node = decisionTree[nodeKey];
+  const container = document.getElementById("optionsContainer");
+  container.innerHTML = "";
+  if(nodeKey === "trackCourseInput"){ renderCourseSelection(); return; }
+  if(nodeKey === "end"){ renderSummary(); return; }
+
+  // --- NEW: auto-skip the "credits" step; compute & jump to summary
+  if(nodeKey === "credits"){
+    const res = calculateCompletedCreditsFromSelections();
+    studentProfile.creditsCalculated = res.total;
+    studentProfile.creditsCountedCourses = res.counted; // for debugging/trace
+    currentNode = "end";
+    renderNode(currentNode);
+    updateProgress(Math.min(historyStack.length * 10, 95));
+    return;
+  }
+
+  document.getElementById("questionText").innerText = node.question;
+  node.options.forEach((option, idx)=>{
+    const btn = document.createElement("button");
+    btn.innerText = option.text;
+    btn.setAttribute('data-idx', idx+1);
+    btn.onclick = () => { applyOption(option); };
+    container.appendChild(btn);
+  });
+}
+function applyOption(option){
+  historyStack.push({ node: currentNode, profileSnapshot: JSON.parse(JSON.stringify(studentProfile)) });
+  if(option.set){ Object.assign(studentProfile, option.set); }
+  if(option.action){ try{ option.action(); }catch(e){ console.warn(e); } }
+  currentNode = option.next;
+  renderNode(currentNode);
+  updateProgress(Math.min(historyStack.length * 10, 95));
+}
+
+function renderCourseSelection(){
+  const q = "Track: " + studentProfile.track + "\n\nSelect all courses the student has completed:";
+  document.getElementById("questionText").innerText = q;
+  const container = document.getElementById("optionsContainer");
+  container.innerHTML = "";
+  // Certifications section
+  const certWrap = document.createElement('div');
+  certWrap.innerHTML = '<div class="section-title">Industry Certifications (auto-credit)</div>';
+  const certList = document.createElement('div');
+  Object.keys(certificationCreditMap).forEach(cert => {
+    const label = document.createElement('label');
+    label.style.display='block';
+    label.style.margin='4px 0';
+    const cb = document.createElement('input');
+    cb.type='checkbox'; cb.value=cert;
+    cb.checked = studentProfile.certifications.includes(cert);
+    cb.onchange = () => { toggleCertification(cert, cb.checked); };
+    label.appendChild(cb);
+    label.appendChild(document.createTextNode(' ' + cert + ' '));
+    const credits = certificationCreditMap[cert].map(c=>`<span class="pill">${c}</span>`).join(' ');
+    const span = document.createElement('span'); span.className='note'; span.innerHTML = '→ credits: ' + credits;
+    label.appendChild(span);
+    certList.appendChild(label);
+  });
+  certWrap.appendChild(certList);
+  container.appendChild(certWrap);
+
+  const trackData = courseCatalog[studentProfile.track];
+  // Filter bar
+  const filterBar = document.createElement('div');
+  filterBar.className = 'grid';
+  filterBar.style.margin='8px 0';
+  filterBar.innerHTML = `
+    <div class="field"><label>Transcript/Prior Courses (paste list)</label>
+    <textarea id="bulkCourses" rows="3" style="width:100%;padding:8px;border:1px solid #cfd8dc;border-radius:8px" placeholder="e.g., ENG 101, CIT 105, CIT 111..."></textarea>
+    </div>
+    <div class="field"><label> </label>
+    <button id="btnBulkApply">Mark from List</button>
+    </div>`;
+  container.appendChild(filterBar);
+  
+  // --- NEW: Placement Helper button on the Track Course Selection screen ---
+const placementBar = document.createElement('div');
+placementBar.style.margin = '8px 0';
+const placementBtn = document.createElement('button');
+placementBtn.innerText = 'Open Placement Helper';
+placementBtn.title = 'Open placement helper (Alt+P also works)';
+placementBtn.onclick = () => openPlacementHelper();
+placementBar.appendChild(placementBtn);
+container.appendChild(placementBar);
+
+  // Required Technical
+  const section1 = document.createElement("div");
+  section1.innerHTML = "<div class=\"section-title\">Required Technical Courses</div>";
+  container.appendChild(section1);
+  trackData.required.forEach(course => { addCheckbox(course, container); });
+
+  // Track-Specific
+  const section2 = document.createElement("div");
+  section2.innerHTML = "<div class=\"section-title\">Track-Specific Courses</div>";
+  container.appendChild(section2);
+  trackData.trackSpecific.forEach(course => { addCheckbox(course, container); });
+
+  // General Ed
+  const section3 = document.createElement("div");
+  section3.innerHTML = "<div class=\"section-title\">General Education Requirements</div>";
+  container.appendChild(section3);
+  trackData.generalEducation.forEach(requirement => {
+    const wrapper = document.createElement("div");
+    wrapper.style.margin = "6px 0";
+    const label = document.createElement("span");
+    label.innerText = requirement + ": ";
+    label.style.display = "inline-block";
+    label.style.width = "300px";
+    const input = document.createElement("input");
+    input.type = "text";
+    input.placeholder = "Enter course (e.g., ENG 101)";
+    input.style.padding = "6px";
+    input.style.width = "220px";
+    input.dataset.requirement = requirement;
+    input.value = studentProfile.generalEducationCourses?.[requirement] || "";
+    wrapper.appendChild(label);
+    wrapper.appendChild(input);
+    container.appendChild(wrapper);
+  });
+
+  // Buttons
+  const controls = document.createElement('div');
+  controls.style.marginTop = '12px';
+  const submitBtn = document.createElement("button");
+  submitBtn.innerText = "Save Completed Courses and Continue";
+  submitBtn.onclick = () => {
+    // Capture checked CIT courses
+    const selected = Array.from(container.querySelectorAll("input[type=checkbox][data-kind=course]:checked")).map(cb => cb.value);
+    studentProfile.completedCourses = Array.from(new Set([...selected, ...studentProfile.creditedCourses]));
+    // Capture Gen Ed inputs
+    const genEdInputs = container.querySelectorAll("input[type=text]");
+    let genEdData = {};
+    genEdInputs.forEach(input => {
+      const requirement = input.dataset.requirement;
+      const value = input.value.trim();
+      if(value !== ""){ genEdData[requirement] = value; }
+    });
+    studentProfile.generalEducationCourses = genEdData;
+    currentNode = "credits";
+    renderNode(currentNode);
+    updateProgress(Math.min(historyStack.length * 10, 95));
+  };
+  controls.appendChild(submitBtn);
+  const selectAllBtn = document.createElement('button');
+  selectAllBtn.setAttribute("data-role", "hide-select-all");   // NEW
+  selectAllBtn.innerText = 'Select All Displayed';
+  selectAllBtn.onclick = () => { container.querySelectorAll("input[type=checkbox][data-kind=course]").forEach(cb => cb.checked = true); };
+  controls.appendChild(document.createTextNode(' '));
+  controls.appendChild(selectAllBtn);
+  container.appendChild(document.createElement("br"));
+  container.appendChild(controls);
+
+  // Bulk mark handler
+  document.getElementById('btnBulkApply').onclick = () => {
+    const list = (document.getElementById('bulkCourses').value||'').toUpperCase();
+    container.querySelectorAll("input[type=checkbox][data-kind=course]").forEach(cb => {
+      const code = cb.value.toUpperCase();
+      if(list.includes(code)){ cb.checked = true; }
+    });
+  };
+  // Apply certification credits to UI
+  applyCertificationCreditsToUI(container);
+}
+function addCheckbox(course, container){
+  const label = document.createElement("label");
+  label.style.display = "block";
+  label.style.margin = "4px 0";
+  const checkbox = document.createElement("input");
+  checkbox.type = "checkbox";
+  checkbox.value = course;
+  checkbox.setAttribute('data-kind','course');
+  label.appendChild(checkbox);
+  label.appendChild(document.createTextNode(" " + course));
+  container.appendChild(label);
+}
+function toggleCertification(cert, checked){
+  if(checked){ if(!studentProfile.certifications.includes(cert)) studentProfile.certifications.push(cert); }
+  else{ studentProfile.certifications = studentProfile.certifications.filter(c => c!==cert); }
+  // Recompute credited courses
+  const all = new Set();
+  studentProfile.certifications.forEach(c => certificationCreditMap[c].forEach(k => all.add(k)));
+  studentProfile.creditedCourses = Array.from(all);
+  // Keep UI in sync
+  const container = document.getElementById('optionsContainer');
+  applyCertificationCreditsToUI(container);
+}
+function applyCertificationCreditsToUI(container){
+  if(!container) return;
+  const credited = new Set(studentProfile.creditedCourses);
+  container.querySelectorAll("input[type=checkbox][data-kind=course]").forEach(cb => {
+    if(credited.has(cb.value)){
+      cb.checked = true; cb.disabled = true; cb.parentElement.title = 'Credited by certification'; cb.parentElement.style.opacity = .85;
+    }else{ cb.disabled = false; cb.parentElement.style.opacity = 1; }
+  });
+}
+function goBack(){
+  if(historyStack.length > 0){
+    const lastState = historyStack.pop();
+    currentNode = lastState.node;
+    studentProfile = lastState.profileSnapshot;
+    renderNode(currentNode);
+    updateProgress(Math.max(historyStack.length * 10, 0));
+  }
+}
+function restart(){
+  historyStack = [];
+  currentNode = 'start';
+  studentProfile = { program: "Computer & Information Technologies AAS", track:null, credits:null, transferStudent:null, remedial:null, needsMajorUpdate:null, hasHold:null, completedCourses:[], generalEducationCourses:{}, certifications:[], creditedCourses:[], plannedCourses:[], electiveSelections:{} };
+  renderNode(currentNode);
+  updateProgress(0);
+}
+function updateProgress(percent){ document.getElementById("progressBar").style.width = percent + "%"; }
+
+// --- NEW: Completed Credit Calculator (CIT-only, from explicit codes) ---
+function calculateCompletedCreditsFromSelections(){
+  const selected = new Set([
+    ...(studentProfile.completedCourses || []),
+    ...(studentProfile.creditedCourses || [])
+  ]);
+  let total = 0;
+  const counted = [];
+
+  selected.forEach(code => {
+    // Count only explicit course codes like "CIT 170"
+    const m = String(code).trim().match(/^[A-Z]{2,4}\s?\d{3,4}$/);
+    if(m){
+      const norm = m[0].replace(/\s+/g,' ').trim();
+      const rule = courseRules[norm];
+      if(rule && typeof rule.credits === 'number'){
+        total += rule.credits;
+        counted.push(norm);
+      }
+    }
+  });
+  return { total, counted };
+}
+
+// ================================
+// Summary & Remaining Coursework (Enhanced)
+// ================================
+function renderSummary(){
+  const box = document.getElementById('summaryBox');
+  box.style.display = 'block';
+  // --- NEW: ensure credits have been computed at least once ---
+if (typeof studentProfile.creditsCalculated !== 'number') {
+  const res = calculateCompletedCreditsFromSelections();
+  studentProfile.creditsCalculated = res.total;
+  studentProfile.creditsCountedCourses = res.counted;
+}
+  const track = studentProfile.track;
+  const trackData = courseCatalog[track] || {required:[], trackSpecific:[], generalEducation:[]};
+  const completed = new Set(studentProfile.completedCourses);
+  const reqs = [...trackData.required, ...trackData.trackSpecific];
+  // Count elective selections by label
+  const electiveCounts = {};
+  Object.values(studentProfile.electiveSelections||{}).forEach(e=>{ if(e && e.course){ electiveCounts[e.label] = (electiveCounts[e.label]||0) + 1; } });
+  // Helper to decide satisfaction including elective picks
+  function satisfiedWithElectives(req){
+    const normalized = (req||'').trim();
+    if(/200-Level CIT Elective/i.test(normalized)){
+      if((electiveCounts['200-Level CIT Elective']||0) > 0){ electiveCounts['200-Level CIT Elective']--; return true; }
+      return false;
+    }
+    if(/CIT Elective/i.test(normalized)){
+      if((electiveCounts['CIT Elective']||0) > 0){ electiveCounts['CIT Elective']--; return true; }
+      return false;
+    }
+    return isRequirementSatisfied(req, completed);
+  }
+  const remaining = reqs.filter(req => !satisfiedWithElectives(req));
+  const satisfied = reqs.filter(req => satisfiedWithElectives(req));
+  const genEdReqs = trackData.generalEducation;
+  const completedGenEdKeys = new Set(Object.keys(studentProfile.generalEducationCourses||{}));
+  const remainingGenEd = genEdReqs.filter(k => !completedGenEdKeys.has(k));
+  const creditedPills = (studentProfile.creditedCourses||[]).map(c=>`<span class="pill">${c}</span>`).join(' ');
+
+  const plannedPills = (studentProfile.plannedCourses||[]).map(c=>`<span class="pill">${c}</span>`).join(' ');
+  const electivePlanPills = Object.entries(studentProfile.electiveSelections||{}).map(([slotKey,obj])=>`<span class="pill">${obj.label} → ${obj.course}</span>`).join(' ');
+
+  box.innerHTML = `
+    <strong>Program:</strong> ${studentProfile.program}<br>
+    <strong>Needs Major Update:</strong> ${studentProfile.needsMajorUpdate === null ? 'Unknown' : (studentProfile.needsMajorUpdate ? 'Yes':'No')}<br>
+    <strong>Has Hold:</strong> ${studentProfile.hasHold === null ? 'Unknown' : (studentProfile.hasHold ? 'Yes':'No')}<br>
+    <strong>Track:</strong> ${track || 'Not Selected'}<br>
+    <strong>Credits Completed:</strong> ${studentProfile.credits || 'Unknown'}
+	${studentProfile.creditsCalculated} <span class="note">(CIT/technical only; GenEd not counted yet)</span>
+    <hr>
+    <div><strong>Completed (including certification credits):</strong><br>
+      ${Array.from(completed).map(c=>`<span class="pill">${c}</span>`).join(' ') || '<span class="note">None selected</span>'}
+    </div>
+    ${creditedPills ? `<div class="note">Auto-credited by certifications: ${creditedPills}</div>` : ''}
+    <div style="margin-top:8px"><strong>Remaining Program/Track Courses:</strong><br>
+      ${remaining.length? remaining.map(c=>`<span class="pill">${c}</span>`).join(' ') : '<span class="success">No remaining courses detected based on selections</span>'}
+    </div>
+    ${plannedPills || electivePlanPills ? `<div style="margin-top:8px"><strong>Planned (not yet completed):</strong><br>${plannedPills} ${electivePlanPills}</div>` : ''}
+    <div style="margin-top:8px"><strong>General Education Entered:</strong><br>
+      ${(Object.entries(studentProfile.generalEducationCourses||{}).map(([k,v])=>`<span class="pill">${k}: ${v}</span>`).join(' ')) || '<span class="note">None entered</span>'}
+    </div>
+    <div style="margin-top:8px"><strong>Remaining General Education Attributes:</strong><br>
+      ${remainingGenEd.length? remainingGenEd.map(c=>`<span class="pill">${c}</span>`).join(' ') : '<span class="success">All GenEd attributes recorded</span>'}
+    </div>
+    <hr>
+    <div class="note">Use the buttons in the header to Save, Load, Export JSON, or Print this summary.</div>
+  `;
+
+  // Render action buttons below
+  const container = document.getElementById('optionsContainer');
+  container.innerHTML = '';
+  const toTop = document.createElement('button');
+  toTop.innerText = 'Finish & Show Summary';
+  toTop.onclick = () => window.scrollTo({top:0,behavior:'smooth'});
+  container.appendChild(toTop);
+
+  const planBtn = document.createElement('button');
+  planBtn.innerText = 'Open Course Planner (enforce prereqs/coreqs)';
+  planBtn.onclick = () => openPlanner();
+  container.appendChild(document.createTextNode(' '));
+  container.appendChild(planBtn);
+
+  latestSummaryObject = { timestamp: new Date().toISOString(), studentProfile, trackData, satisfied, remaining, remainingGenEd };
+}
+
+function isRequirementSatisfied(req, completedSet){
+  // Handle patterns like "CIT 160/161" or "CIT 144 or 171" or "CIT 257 or CIT 258"
+  const normalized = req.replace(/\s+/g,' ').trim();
+  if(normalized.includes('/')){ const parts = normalized.split('/').map(s => s.trim()); return parts.some(p => completedSet.has(p)); }
+  if(/\bor\b/i.test(normalized)){ const parts = normalized.split(/\bor\b/i).map(s => s.trim()); return parts.some(p => completedSet.has(p)); }
+  // Generic placeholders like Elective can't be auto-satisfied
+  if(/elective/i.test(normalized) || /Approved Level/i.test(normalized)){ return false; }
+  return completedSet.has(normalized);
+}
+
+// ================================
+// Save / Load / Export / Print (preserved)
+// ================================
+function saveSession(){ const payload = { version: 2, currentNode, historyStack, studentProfile }; localStorage.setItem('advisor_session', JSON.stringify(payload)); toast('Session saved'); }
+function loadSession(){ try{ const raw = localStorage.getItem('advisor_session'); if(!raw) return toast('No saved session found'); const data = JSON.parse(raw); currentNode = data.currentNode || 'start'; historyStack = data.historyStack || []; studentProfile = data.studentProfile || studentProfile; renderNode(currentNode); updateProgress(Math.min(historyStack.length * 10, 95)); toast('Session loaded'); }catch(e){ toast('Failed to load session'); } }
+function exportJSON(){ const blob = new Blob([JSON.stringify(latestSummaryObject || {studentProfile}, null, 2)], {type:'application/json'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'advising-summary.json'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); }
+function printSummary(){ window.print(); }
+let latestSummaryObject = null;
+function toast(msg){ const el = document.createElement('div'); el.textContent = msg; el.style.cssText = 'position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:8px 12px;border-radius:6px;opacity:.95;z-index:9999'; document.body.appendChild(el); setTimeout(()=>{ el.remove(); }, 1600); }
+
+// ================================
+// Placement Helper Logic (preserved)
+// ================================
+function openPlacementHelper(){ document.getElementById('placementModal').showModal(); computePlacement(); }
+function computePlacement(){
+  const gpa = parseFloat(document.getElementById('ph_gpa').value);
+  const actR = parseFloat(document.getElementById('ph_act_read').value);
+  const actE = parseFloat(document.getElementById('ph_act_eng').value);
+  const actM = parseFloat(document.getElementById('ph_act_math').value);
+  const satEBRW = parseFloat(document.getElementById('ph_sat_ebrw').value);
+  const satWL = parseFloat(document.getElementById('ph_sat_wl').value);
+  const satM = parseFloat(document.getElementById('ph_sat_math').value);
+  const ged = parseFloat(document.getElementById('ph_ged').value);
+  const accuRW = parseFloat(document.getElementById('ph_acc_rw').value);
+  const kyCA = parseFloat(document.getElementById('ph_kyote_ca').value);
+  const kyMP = parseFloat(document.getElementById('ph_kyote_mp').value);
+  const kyKALG = parseFloat(document.getElementById('ph_kyote_kalg').value);
+  const engDirect = ((actR>=20 || satEBRW>=490 || (accuRW>=250) || (ged>=165) || (gpa>=3.0)) && (actE>=18 || satWL>=22 || satEBRW>=490 || (accuRW>=250) || (ged>=165) || (gpa>=3.0)) );
+  const engPaired = (((actR>=16 && actR<=19) || (accuRW>=228 && accuRW<=249) || (gpa>=2.0 && gpa<3.0)) && ((actE>=16 && actE<=19) || (accuRW>=228 && accuRW<=249) || (gpa>=2.0 && gpa<3.0)) );
+  const engReferral = ((actR>0 && actR<=15) || (actE>0 && actE<=13));
+  let engPlacement = 'Insufficient data';
+  if(engDirect){ engPlacement = 'ENG 101'; }
+  else if(engPaired){ engPlacement = 'ENG 101 + IRW 100 + FYE 110 (coreq)'; }
+  else if(engReferral){ engPlacement = 'Referral to Adult Education'; }
+  let mathPlacement = 'Insufficient data';
+  if(actM>=27 || satM>=640 || kyCA>=15){ mathPlacement = 'Eligible for MAT 175'; }
+  else if((actM>=22 && actM<=26) || (satM>=540 && satM<=639) || (gpa>=3.2) || kyCA>=14){ mathPlacement = 'Eligible for MAT 150 or MAT 155'; }
+  else if((actM>=19 && actM<=21) || (satM>=510 && satM<=539) || (ged>=165 && ged<=174) || (gpa>=3.0 && gpa<=3.19) || (kyCA>=7 && kyCA<=13) || (kyMP>=22)){
+    mathPlacement = 'Eligible for MAT 150 (with MAT 100 coreq), or MAT 146/126/105';
+  }
+  const html = `
+    <p><strong>English (College Writing I):</strong> <span>${engPlacement}</span></p>
+    <ul class="note">
+      <li>If <em>ENG 101</em>, then student meets the College Writing I attribute.</li>
+      <li>If <em>ENG 101 + IRW 100 + FYE 110</em>, schedule those together.</li>
+      <li>If <em>Referral</em>, student should work with Adult Education.</li>
+    </ul>
+    <p><strong>Math (Qualitative Reasoning attribute):</strong> <span>${mathPlacement}</span></p>`;
+  document.getElementById('placementResults').innerHTML = html;
+}
+
+// ================================
+// Planner Logic (NEW)
+// ================================
+function openPlanner(){
+  const dlg = document.getElementById('plannerModal');
+  const content = document.getElementById('plannerContent');
+  const trackData = courseCatalog[studentProfile.track] || {required:[], trackSpecific:[], generalEducation:[]};
+  const completed = new Set([...(studentProfile.completedCourses||[]), ...(studentProfile.creditedCourses||[])]);
+  const reqs = [...trackData.required, ...trackData.trackSpecific];
+  const remainingReqs = reqs.filter(r => !isRequirementSatisfied(r, completed));
+
+  // Split specific courses vs elective slots
+  const specificCourses = [];
+  const electiveSlots = [];
+  remainingReqs.forEach(r=>{
+    if(/^CIT\s?\d{3}(\s|$)/.test(r)){ // explicit course or alternatives
+      // if contains 'or' or '/', add each as option? Planner will show each alternative separately
+      if(r.includes('/') || /\bor\b/i.test(r)){
+        const alts = r.includes('/') ? r.split('/') : r.split(/\bor\b/i);
+        alts.map(s=>s.trim()).forEach(code => specificCourses.push(code));
+      } else {
+        specificCourses.push(r.trim());
+      }
+    } else {
+      electiveSlots.push(r.trim());
+    }
+  });
+
+  const consent = document.getElementById('planner_consent').checked;
+  const plannedSet = new Set(studentProfile.plannedCourses || []);
+  const plannedElectives = studentProfile.electiveSelections || {};
+
+  // Build HTML
+  let html = '';
+  html += '<div class="two-col">';
+  html += '<div>';
+  html += '<div class="section-title">Remaining Specific Courses</div>';
+  if(specificCourses.length===0){ html += '<div class="note">None</div>'; }
+  specificCourses.forEach(code=>{
+    const rule = courseRules[code];
+    const elig = checkEligibility(code, consent);
+    const disabled = !elig.ok;
+    const reasons = [...(elig.missingPrereqs||[]), ...(elig.missingCoreqs||[])];
+    html += `<div class="course-card">
+      <div class="title">${code} ${rule?('— '+rule.title):''}
+        ${rule&&rule.approvedElectiveLevel?`<span class="badge">Approved Elective ${rule.approvedElectiveLevel}-level</span>`:''}
+      </div>
+      <div class="meta">${rule? `${rule.credits} credits` : ''}</div>
+      ${!elig.ok ? `<div class="error">Cannot plan yet: needs ${reasons.join(', ')}</div>` : ''}
+      <label class="note"><input type="checkbox" class="plan-course" value="${code}" ${plannedSet.has(code)?'checked':''} ${disabled?'disabled':''}> Plan this course</label>
+    </div>`;
+  });
+  html += '</div>';
+
+  html += '<div>';
+  html += '<div class="section-title">Elective Slots</div>';
+  if(electiveSlots.length===0){ html += '<div class="note">No elective slots remaining.</div>'; }
+  const completedSet = new Set([...(studentProfile.completedCourses||[]), ...(studentProfile.creditedCourses||[])]);
+
+  electiveSlots.forEach((slot,idx)=>{
+    // Determine allowed list for this slot
+    let allowed = [];
+    if(/200-Level CIT Elective/i.test(slot)){
+      allowed = approvedElectivesByLevel['200'];
+    } else if(/CIT Elective/i.test(slot)){
+      // allow both levels
+      allowed = [...approvedElectivesByLevel['100'], ...approvedElectivesByLevel['200']];
+    } else {
+      allowed = [...approvedElectivesByLevel['100'], ...approvedElectivesByLevel['200']];
+    }
+    // remove those already completed
+    allowed = allowed.filter(c => !completedSet.has(c));
+    // Sort by code
+    allowed.sort();
+
+    const selId = `slot_${idx}`;
+    const slotKey = `slot_${idx}`;
+    const preSel = plannedElectives[slotKey]?.course || '';
+
+    html += `<div class="course-card">
+      <div class="title">${slot}</div>
+      <div class="meta">Choose one that meets prerequisites</div>
+      <div class="field">
+        <label for="${selId}">Approved options</label>
+        <select id="${selId}" data-slotkey="${slotKey}" data-slotlabel="${slot}">
+          <option value="">-- Select an approved elective --</option>
+          ${allowed.map(code=>{
+            const e = checkEligibility(code, consent);
+            const rule = courseRules[code];
+            const reasons = [...(e.missingPrereqs||[]), ...(e.missingCoreqs||[])];
+            const label = `${code} — ${rule?rule.title:''}` + (rule&&rule.approvedElectiveLevel?` [${rule.approvedElectiveLevel}-level]`:'' );
+            const disabled = e.ok? '' : 'disabled';
+            const selected = (preSel===code)? 'selected' : '';
+            return `<option value="${code}" ${disabled} ${selected} title="${e.ok?'Eligible':('Needs '+reasons.join(', '))}">${label}</option>`;
+          }).join('')}
+        </select>
+        ${preSel?`<div class="note">Previously selected: ${preSel}</div>`:''}
+      </div>
+    </div>`;
+  });
+  html += '</div>';
+  html += '</div>';
+
+  // Attach live update handlers
+  setTimeout(()=>{
+    document.querySelectorAll('#plannerContent .plan-course').forEach(cb=>{ cb.addEventListener('change', updateElectiveOptionStates); });
+    updateElectiveOptionStates();
+  },0);
+
+  // Info area
+  html += `<details open style="margin-top:8px">
+    <summary>How eligibility is checked</summary>
+    <div class="note">We verify course prerequisites and corequisites against your completed and certification-credited courses. If "Allow instructor consent" is checked and a course permits consent, you may plan it even if some requirements are unmet.</div>
+  </details>`;
+
+// --- NEW: Placement Helper quick-access in Planner header ---
+(() => {
+  const header = document.querySelector('#plannerModal .modal-card > header');
+  if (!header.querySelector('[data-role="planner-placement-btn"]')) {
+    const helperWrap = document.createElement('div');
+    helperWrap.style.marginTop = '8px';
+
+    const helperBtn = document.createElement('button');
+    helperBtn.textContent = 'Open Placement Helper';
+    helperBtn.title = 'Open placement helper (Alt+P also works)';
+    helperBtn.setAttribute('data-role', 'planner-placement-btn');
+    helperBtn.style.marginRight = '8px';
+    helperBtn.onclick = () => openPlacementHelper();
+
+    helperWrap.appendChild(helperBtn);
+    header.appendChild(helperWrap);
+  }
+})();
+
+  content.innerHTML = html;
+  // open dialog
+  dlg.showModal();
+}
+
+function checkEligibility(code, allowConsent){
+  const rule = courseRules[code];
+  if(!rule){ return {ok:true, missingPrereqs:[], missingCoreqs:[]}; }
+  const completed = new Set([...(studentProfile.completedCourses||[]), ...(studentProfile.creditedCourses||[]), ...(studentProfile.plannedCourses||[])]);
+  // Prereqs
+  const missingPrereqs = [];
+  const p = rule.prereq || {allOf:[]};
+  (p.allOf||[]).forEach(group=>{
+    const anyOf = group.anyOf||[];
+    // Only enforce explicit course prerequisites; other tokens are advisory
+    const courseOptions = anyOf.filter(x=>x.course).map(x=>x.course);
+    if(courseOptions.length>0){
+      const satisfied = courseOptions.some(c => completed.has(c));
+      if(!satisfied){ missingPrereqs.push(`one of (${courseOptions.join(' or ')})`); }
+    }
+  });
+  // Coreqs
+  const missingCoreqs = [];
+  const c = rule.coreq || {anyOf:[], allOf:[]};
+  // allOf coreqs must be present or planned
+  (c.allOf||[]).forEach(x=>{ if(x.course && !completed.has(x.course)){ missingCoreqs.push(x.course); } });
+  // anyOf coreq satisfied if any present
+  if((c.anyOf||[]).length>0){
+    const opts = (c.anyOf||[]).filter(x=>x.course).map(x=>x.course);
+    if(opts.length>0){
+      const ok = opts.some(cc => completed.has(cc));
+      if(!ok){ missingCoreqs.push(`one of (${opts.join(' or ')})`); }
+    }
+  }
+  let ok = (missingPrereqs.length===0 && missingCoreqs.length===0);
+  if(!ok && allowConsent && rule.consentAllowed){ ok = true; }
+  return {ok, missingPrereqs, missingCoreqs};
+
+function checkEligibilitySnapshot(code, allowConsent, tempPlanned){
+  // Same as checkEligibility but accepts a temp planned set for live UI updates
+  const rule = courseRules[code];
+  if(!rule){ return {ok:true, missingPrereqs:[], missingCoreqs:[]}; }
+  const completed = new Set([...(studentProfile.completedCourses||[]), ...(studentProfile.creditedCourses||[])]);
+  (tempPlanned||[]).forEach(c=>completed.add(c));
+  const missingPrereqs = [];
+  const p = rule.prereq || {allOf:[]};
+  (p.allOf||[]).forEach(group=>{
+    const anyOf = group.anyOf||[];
+    const courseOptions = anyOf.filter(x=>x.course).map(x=>x.course);
+    if(courseOptions.length>0){
+      const satisfied = courseOptions.some(c => completed.has(c));
+      if(!satisfied){ missingPrereqs.push(`one of (${courseOptions.join(' or ')})`); }
+    }
+  });
+  const missingCoreqs = [];
+  const c = rule.coreq || {anyOf:[], allOf:[]};
+  (c.allOf||[]).forEach(x=>{ if(x.course && !completed.has(x.course)){ missingCoreqs.push(x.course); } });
+  if((c.anyOf||[]).length>0){
+    const opts = (c.anyOf||[]).filter(x=>x.course).map(x=>x.course);
+    if(opts.length>0){
+      const ok = opts.some(cc => completed.has(cc));
+      if(!ok){ missingCoreqs.push(`one of (${opts.join(' or ')})`); }
+    }
+  }
+  let ok = (missingPrereqs.length===0 && missingCoreqs.length===0);
+  if(!ok && allowConsent && rule.consentAllowed){ ok = true; }
+  return {ok, missingPrereqs, missingCoreqs};
+}
+
+function collectTempPlanned(){
+  return Array.from(document.querySelectorAll('#plannerContent .plan-course:checked')).map(cb=>cb.value);
+}
+
+function updateElectiveOptionStates(){
+  const consent = document.getElementById('planner_consent').checked;
+  const tempPlanned = collectTempPlanned();
+  const selects = Array.from(document.querySelectorAll('#plannerContent select[data-slotkey]'));
+  selects.forEach(sel=>{
+    Array.from(sel.options).forEach((opt,i)=>{
+      if(i===0) return; // skip placeholder
+      const code = opt.value;
+      const e = checkEligibilitySnapshot(code, consent, tempPlanned);
+      opt.disabled = e.ok ? false : true;
+      opt.title = e.ok ? 'Eligible' : ('Needs ' + [...(e.missingPrereqs||[]), ...(e.missingCoreqs||[])].join(', '));
+    });
+  });
+}
+
+}
+
+function applyPlannerSelections(){
+  const dlg = document.getElementById('plannerModal');
+  // Collect specific planned courses
+  const checks = Array.from(document.querySelectorAll('#plannerContent .plan-course'));
+  const planned = checks.filter(cb=>cb.checked && !cb.disabled).map(cb=>cb.value);
+  studentProfile.plannedCourses = Array.from(new Set(planned));
+  // Collect elective selections
+  const selects = Array.from(document.querySelectorAll('#plannerContent select[data-slotkey]'));
+  const electiveSelections = {};
+  selects.forEach(sel=>{ if(sel.value){ electiveSelections[sel.dataset.slotkey] = { label: sel.dataset.slotlabel, course: sel.value }; } });
+  studentProfile.electiveSelections = electiveSelections;
+  toast('Planner selections saved');
+  dlg.close();
+  // Re-render summary to show planned pills
+  renderSummary();
+}
+
+// ================================
+// Keyboard shortcuts
+// ================================
+window.addEventListener('keydown', (e)=>{
+  if(e.altKey && e.key.toLowerCase()==='r'){ e.preventDefault(); restart(); }
+  if(e.altKey && e.key.toLowerCase()==='s'){ e.preventDefault(); saveSession(); }
+  if(e.altKey && e.key.toLowerCase()==='l'){ e.preventDefault(); loadSession(); }
+  if(e.altKey && e.key.toLowerCase()==='j'){ e.preventDefault(); exportJSON(); }
+  if(e.ctrlKey && e.key.toLowerCase()==='p'){ /* allow print */ }
+  if(e.altKey && e.key.toLowerCase()==='p'){ e.preventDefault(); openPlacementHelper(); }
+  if(e.key.toLowerCase()==='b'){ e.preventDefault(); goBack(); }
+  if(!isNaN(parseInt(e.key))){ const idx = parseInt(e.key); const btn = document.querySelector(`#optionsContainer button[data-idx='${idx}']`); if(btn){ btn.click(); } }
+});
+
+// Header action buttons
+document.getElementById('btnRestart').onclick = restart;
+document.getElementById('btnSave').onclick = saveSession;
+document.getElementById('btnLoad').onclick = loadSession;
+document.getElementById('btnExport').onclick = exportJSON;
+document.getElementById('btnPrint').onclick = printSummary;
+document.getElementById('btnPlacement').onclick = openPlacementHelper;
+
+// Initialize
+renderNode(currentNode);
+updateProgress(0);
+</script>
+</body>
+</html>
