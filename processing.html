@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>RAM → CPU (Intro Demo)</title>
+<style>
+  :root{
+    --ink:#222;
+    --bg:#f4f6f8;
+    --panel:#ffffff;
+    --brand:#003366;
+    --brand-acc:#0055aa;
+    --rim:#555;
+    --on:#34c759;
+    --on-dark:#2e7d32;
+    --bus:#94a3b8; /* softer */
+    --cpu:#0f172a;
+    --alu:#1e293b;
+  }
+  *{box-sizing:border-box}
+  body{font-family:Arial, Helvetica, sans-serif; background:var(--bg); color:var(--ink); margin:0}
+  header{background:var(--brand); color:#fff; padding:1.1rem 1.25rem; text-align:center}
+  main{max-width:1100px; margin:auto; padding:1rem; display:grid; gap:.85rem}
+  .card{background:var(--panel); border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,.08); padding:1rem 1.1rem}
+  .controls{display:flex; flex-wrap:wrap; gap:.75rem 1rem; align-items:end}
+  .controls label{font-size:.9rem; color:#334155; display:block; margin-bottom:.25rem}
+  .controls .group{ min-width:12ch }
+  select,button{font-size:1rem; padding:.5rem .65rem; border-radius:8px; border:1px solid #cbd5e1; background:#fff}
+  button{background:var(--brand); color:#fff; border:none; cursor:pointer}
+  button:hover{background:var(--brand-acc)}
+  button.secondary{background:#334155; border:0}
+  button.secondary:hover{background:#1f2937}
+  .viz{position:relative; display:grid; grid-template-columns: 1fr minmax(180px, 280px); gap:1rem}
+  .ram, .cpu{position:relative; padding:1rem}
+  .ram h3, .cpu h3{margin:.25rem 0 .75rem}
+  .ram-list{display:grid; gap:.8rem}
+  .ram-row{
+    display:grid; grid-template-columns:auto 1fr auto; gap:.75rem; align-items:center;
+    padding:.55rem .55rem; border:1px dashed #dce3ee; border-radius:10px; background:#f9fbfd; position:relative;
+  }
+  .addr{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color:#475569}
+  .hex{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color:#0f172a; min-width:5ch; text-align:right}
+  .byte{display:grid; grid-template-columns:repeat(8, 1fr); gap:.4rem; align-items:end}
+
+  /* Battery bit */
+  .battery{
+    position:relative; width:38px; height:56px; border:2px solid var(--rim);
+    background:#ddd; border-radius:6px; cursor:pointer; display:grid; place-items:center;
+    user-select:none; overflow:visible; transition:transform .15s ease;
+  }
+  .battery:hover{ transform:scale(1.04) }
+  .battery .cap{position:absolute; left:50%; top:0; transform:translateX(-50%) rotate(-45deg); transform-origin:bottom center; width:0; height:0; pointer-events:none}
+  .battery .cap-stem{position:absolute; left:-2px; bottom:0; width:4px; height:12px; background:#555; border-radius:2px}
+  .battery .cap-nub{position:absolute; left:-4px; bottom:10px; width:8px; height:8px; background:#666; border-radius:50%; box-shadow:0 1px 2px rgba(0,0,0,.25)}
+  .battery .digit{font-weight:700; font-size:1rem; color:#0f172a}
+  .battery.on{background:linear-gradient(to top, var(--on) 70%, #b7e1b8); border-color:var(--on-dark); color:#fff}
+  .battery.on .digit{color:#fff}
+
+  /* Data bus (FIXED): draw inside RAM pane only, behind content, no outline, no overlap */
+  .ram .bus{
+    position:absolute; left:1rem; right:1rem; top:50%; transform:translateY(-50%);
+    height:6px; background:var(--bus); border-radius:3px; z-index:0; pointer-events:none;
+  }
+  /* Packet floats above RAM but below CPU */
+  .packet{
+    position:absolute; top:calc(50% - 20px); left:160px; width:72px; height:40px; border-radius:8px;
+    display:grid; place-items:center; background:#111827; color:#fff;
+    font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:.9rem;
+    box-shadow:0 6px 14px rgba(0,0,0,.2); opacity:0; pointer-events:none;
+    transition: transform .6s ease, opacity .2s ease; z-index:1;
+  }
+  .packet.show{ opacity:1 }
+
+  /* CPU box sits above everything else in the viz */
+  .cpu{ z-index: 2; }
+  .cpu-box{border:2px solid var(--cpu); border-radius:10px; padding:.75rem; background:#0b1220; color:#d1e1ff}
+  .regs{display:grid; gap:.5rem}
+  .reg{display:grid; grid-template-columns:auto 1fr auto; gap:.5rem; align-items:center; background:#111827; border:1px solid #1f2937; border-radius:8px; padding:.4rem .5rem}
+  .reg-name{font-weight:700}
+  .reg .leds{display:grid; grid-template-columns:repeat(8, 1fr); gap:.25rem}
+  .led{width:16px; height:16px; border-radius:3px; background:#334155; box-shadow: inset 0 0 0 1px #0b1220}
+  .led.on{background:#22c55e; box-shadow: inset 0 0 0 1px #14532d}
+  .alu-box{margin-top:.6rem; background:var(--alu); border:1px solid #334155; padding:.5rem .6rem; border-radius:8px; display:flex; align-items:center; justify-content:space-between}
+  .alu-label{font-weight:700}
+  .small{font-size:.85rem; color:#475569}
+  footer{text-align:center; color:#556; margin:1rem 0 2rem}
+
+  @media (max-width: 900px){
+    .viz{grid-template-columns:1fr}
+    .ram .bus, .packet{display:none}
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Bytes on the Bus (Intro)</h1>
+  <p class="small" style="margin:.25rem 0 0">Toggle bits in RAM, then step through a simple operation.</p>
+</header>
+
+<main>
+  <section class="card controls" aria-label="Controls">
+    <div class="group">
+      <label for="op">Operation</label>
+      <select id="op">
+        <option value="ADD">ADD (A + B)</option>
+        <option value="SUB">SUBTRACT (A − B)</option>
+        <option value="MUL">MULTIPLY (A × B)</option>
+        <option value="DIV">DIVIDE (A ÷ B)</option>
+      </select>
+    </div>
+    <div class="group">
+      <label for="addrA">Load A from</label>
+      <select id="addrA">
+        <option value="0">RAM[0x00]</option>
+        <option value="1">RAM[0x01]</option>
+        <option value="2">RAM[0x02]</option>
+        <option value="3">RAM[0x03]</option>
+      </select>
+    </div>
+    <div class="group">
+      <label for="addrB">Load B from</label>
+      <select id="addrB">
+        <option value="0">RAM[0x00]</option>
+        <option value="1">RAM[0x01]</option>
+        <option value="2">RAM[0x02]</option>
+        <option value="3">RAM[0x03]</option>
+      </select>
+    </div>
+    <div class="group">
+      <label for="addrD">Store OUT to</label>
+      <select id="addrD">
+        <option value="0">RAM[0x00]</option>
+        <option value="1">RAM[0x01]</option>
+        <option value="2">RAM[0x02]</option>
+        <option value="3">RAM[0x03]</option>
+      </select>
+    </div>
+
+    <div style="flex:1"></div>
+
+    <div class="group"><button id="stepBtn">Step</button></div>
+    <div class="group"><button id="runBtn" class="secondary">Run</button></div>
+    <div class="group"><button id="resetBtn">Reset</button></div>
+  </section>
+
+  <section class="viz">
+    <!-- LEFT: RAM -->
+    <div class="card ram" id="ramPane">
+      <h3>RAM (4 bytes)</h3>
+      <div class="ram-list" id="ramList"></div>
+      <div class="bus" aria-hidden="true"></div>
+      <div class="packet" id="packet" aria-hidden="true">0x00</div>
+      <p class="small" style="margin-top:.75rem">Click any battery to toggle a bit (LSB is on the right).</p>
+    </div>
+
+    <!-- RIGHT: CPU -->
+    <div class="card cpu">
+      <h3>CPU</h3>
+      <div class="cpu-box">
+        <div class="regs">
+          <div class="reg" id="regA">
+            <div class="reg-name">A</div>
+            <div class="leds"></div>
+            <div class="hex">0x00</div>
+          </div>
+          <div class="reg" id="regB">
+            <div class="reg-name">B</div>
+            <div class="leds"></div>
+            <div class="hex">0x00</div>
+          </div>
+          <div class="alu-box" id="alu">
+            <span class="alu-label">ALU</span>
+            <span id="aluOp">ADD</span>
+            <span id="flags" class="small">Flags: Z=1 C=0</span>
+          </div>
+          <div class="reg" id="regOUT">
+            <div class="reg-name">OUT</div>
+            <div class="leds"></div>
+            <div class="hex">0x00</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <p class="small">This is a conceptual teaching aid. Arithmetic is simplified to 8-bit results for clarity.</p>
+</footer>
+
+<script>
+/* -------- Model -------- */
+const ram = [0b00000001, 0b00000101, 0b00000000, 0b00000000]; // 1, 5, 0, 0
+const regs = { A:0, B:0, OUT:0 };
+let flags = { Z:1, C:0 };
+let stepIx = 0; let running=false; let runTimer=null;
+
+const $ = s => document.querySelector(s);
+
+/* -------- Helpers -------- */
+const bitAt = (v,i)=> (v>>i)&1;
+const setBit = (v,i,b)=> b? (v|(1<<i)) : (v & ~(1<<i));
+const toHex = v => '0x' + (v & 0xFF).toString(16).toUpperCase().padStart(2,'0');
+
+/* -------- Render RAM -------- */
+const ramList = $('#ramList');
+function renderRAM(){
+  ramList.innerHTML='';
+  for(let i=0;i<4;i++){
+    const row = document.createElement('div'); row.className='ram-row'; row.dataset.index=i;
+
+    const addr = document.createElement('div'); addr.className='addr'; addr.textContent = 'RAM['+('0x0'+i).slice(-4)+']';
+    const hex = document.createElement('div'); hex.className='hex'; hex.id='ramHex'+i; hex.textContent = toHex(ram[i]);
+
+    const byte = document.createElement('div'); byte.className='byte';
+    for(let b=7;b>=0;b--){
+      const bit = document.createElement('div'); bit.className='battery'+(bitAt(ram[i],b)?' on':''); bit.tabIndex=0;
+      bit.setAttribute('role','button'); bit.setAttribute('aria-label',`Bit ${b}`);
+      bit.innerHTML = `
+        <span class="cap"><span class="cap-stem"></span><span class="cap-nub"></span></span>
+        <span class="digit">${bitAt(ram[i],b)}</span>
+      `;
+      bit.addEventListener('click', () => toggleRamBit(i,b));
+      bit.addEventListener('keydown', (e)=>{ if(e.key===' '||e.key==='Enter'){e.preventDefault(); toggleRamBit(i,b);} });
+      byte.appendChild(bit);
+    }
+
+    row.appendChild(addr); row.appendChild(byte); row.appendChild(hex);
+    ramList.appendChild(row);
+  }
+}
+
+/* -------- Render CPU -------- */
+function renderReg(name, v){
+  const reg = document.getElementById('reg'+name);
+  reg.querySelector('.hex').textContent = toHex(v);
+  const leds = reg.querySelector('.leds');
+  if(!leds.children.length){
+    for(let i=0;i<8;i++){ const d=document.createElement('div'); d.className='led'; leds.appendChild(d); }
+  }
+  const nodes = Array.from(leds.children);
+  for(let i=0;i<8;i++){
+    const isOn = bitAt(v, 7-i); nodes[i].classList.toggle('on', !!isOn);
+  }
+}
+function renderCPU(){
+  renderReg('A', regs.A);
+  renderReg('B', regs.B);
+  renderReg('OUT', regs.OUT);
+  document.getElementById('aluOp').textContent = document.getElementById('op').value;
+  document.getElementById('flags').textContent = `Flags: Z=${flags.Z|0} C=${flags.C|0}`;
+}
+
+/* -------- RAM bit toggle -------- */
+function toggleRamBit(byteIx, bitIx){
+  const val = !bitAt(ram[byteIx], bitIx);
+  ram[byteIx] = setBit(ram[byteIx], bitIx, val);
+  const row = ramList.querySelector(`.ram-row[data-index="${byteIx}"]`);
+  const cell = row.querySelectorAll('.byte .battery')[7-bitIx];
+  cell.classList.toggle('on', val);
+  cell.querySelector('.digit').textContent = val? '1':'0';
+  document.getElementById('ramHex'+byteIx).textContent = toHex(ram[byteIx]);
+}
+
+/* -------- Packet animation (kept inside RAM pane) -------- */
+const packet = document.getElementById('packet');
+function centerOf(el){
+  const r = el.getBoundingClientRect();
+  return { x: r.left + r.width/2 + window.scrollX, y: r.top + r.height/2 + window.scrollY };
+}
+function movePacket(fromEl, toEl, label){
+  const from = centerOf(fromEl); const to = centerOf(toEl);
+  const p = packet;
+  p.textContent = label;
+  p.style.opacity = '0';
+  const pr = p.getBoundingClientRect();
+  const startX = from.x - (pr.left + window.scrollX) - pr.width/2;
+  const startY = from.y - (pr.top + window.scrollY) - pr.height/2;
+  const dx = to.x - from.x; const dy = to.y - from.y;
+  p.style.transform = `translate(${startX}px, ${startY}px)`;
+  p.classList.add('show'); void p.offsetWidth;
+  p.style.transform = `translate(${startX+dx}px, ${startY+dy}px)`;
+  return new Promise(res => setTimeout(res, 650));
+}
+
+/* -------- Steps: A <- RAM[a], B <- RAM[b], OUT <- op(A,B), RAM[d] <- OUT -------- */
+let aSel = 0, bSel = 1, dSel = 2;
+document.getElementById('addrA').addEventListener('change', e=> aSel = +e.target.value);
+document.getElementById('addrB').addEventListener('change', e=> bSel = +e.target.value);
+document.getElementById('addrD').addEventListener('change', e=> dSel = +e.target.value);
+aSel = +document.getElementById('addrA').value;
+bSel = +document.getElementById('addrB').value;
+dSel = +document.getElementById('addrD').value;
+
+function doALU(op, A, B){
+  // 8-bit results to keep it simple for class (wrap as needed)
+  let out = 0, carry = 0;
+  if(op==='ADD'){ const sum = A + B; out = sum & 0xFF; carry = (sum>>8)&1; }
+  else if(op==='SUB'){ const diff = (A - B); out = (diff & 0xFF); carry = (diff < 0) ? 1 : 0; }
+  else if(op==='MUL'){ const prod = A * B; out = prod & 0xFF; carry = (prod>255)?1:0; }
+  else if(op==='DIV'){ out = (B===0)? 0 : Math.floor(A / B); carry = 0; }
+  return { out, Z: (out===0)?1:0, C: carry };
+}
+
+async function doStep(){
+  const op = document.getElementById('op').value;
+
+  if(stepIx===0){
+    // Fetch A
+    const src = ramList.children[aSel].querySelector('.byte');
+    await movePacket(src, document.getElementById('regA'), toHex(ram[aSel]));
+    regs.A = ram[aSel]; renderCPU(); stepIx=1; return;
+  }
+  if(stepIx===1){
+    // Fetch B
+    const src = ramList.children[bSel].querySelector('.byte');
+    await movePacket(src, document.getElementById('regB'), toHex(ram[bSel]));
+    regs.B = ram[bSel]; renderCPU(); stepIx=2; return;
+  }
+  if(stepIx===2){
+    // Execute (simple arithmetic)
+    const res = doALU(op, regs.A, regs.B);
+    regs.OUT = res.out; flags = { Z: res.Z, C: res.C };
+    renderCPU(); stepIx=3; return;
+  }
+  if(stepIx===3){
+    // Write back
+    const dst = ramList.children[dSel].querySelector('.byte');
+    await movePacket(document.getElementById('regOUT'), dst, toHex(regs.OUT));
+    ram[dSel] = regs.OUT;
+    // refresh dest row display
+    const row = ramList.children[dSel];
+    for(let b=7;b>=0;b--){
+      const node = row.querySelectorAll('.byte .battery')[7-b];
+      const bit = (ram[dSel]>>b)&1;
+      node.classList.toggle('on', !!bit);
+      node.querySelector('.digit').textContent = bit;
+    }
+    document.getElementById('ramHex'+dSel).textContent = toHex(ram[dSel]);
+    stepIx=0; return;
+  }
+}
+
+function onStep(){ doStep(); }
+function onRun(){
+  if(running){ clearInterval(runTimer); running=false; document.getElementById('runBtn').textContent='Run'; return; }
+  running = true; document.getElementById('runBtn').textContent='Pause';
+  runTimer = setInterval(async ()=>{ await doStep(); }, 800);
+}
+function onReset(){ regs.A=0; regs.B=0; regs.OUT=0; flags={Z:1,C:0}; stepIx=0; renderCPU(); }
+
+/* -------- Init -------- */
+function initCPURegs(){
+  ['A','B','OUT'].forEach(r=>{
+    const leds = document.querySelector('#reg'+r+' .leds');
+    if(!leds.children.length){ for(let i=0;i<8;i++){ const d=document.createElement('div'); d.className='led'; leds.appendChild(d); } }
+  });
+}
+function init(){
+  renderRAM(); initCPURegs(); renderCPU();
+  document.getElementById('stepBtn').addEventListener('click', onStep);
+  document.getElementById('runBtn').addEventListener('click', onRun);
+  document.getElementById('resetBtn').addEventListener('click', onReset);
+}
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
