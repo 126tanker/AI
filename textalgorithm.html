@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>How Text Is Processed by an Algorithm</title>
+
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    padding: 20px;
+  }
+
+  h1, h2, h3 {
+    text-align: center;
+  }
+
+  .container {
+    max-width: 1000px;
+    margin: auto;
+  }
+
+  .box {
+    background: white;
+    padding: 16px;
+    margin-bottom: 20px;
+    border-radius: 6px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  }
+
+  .row {
+    width: 100%;
+  }
+
+  .cell {
+    width: 48%;
+    display: inline-block;
+    vertical-align: top;
+    padding: 10px;
+  }
+
+  input {
+    width: 100%;
+    padding: 6px;
+    font-size: 14px;
+    font-family: monospace;
+    margin-bottom: 8px;
+  }
+
+  button {
+    padding: 6px 12px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  pre {
+    background: #eef5ff;
+    padding: 10px;
+    border-left: 4px solid #3b73c4;
+    font-family: monospace;
+    white-space: pre-wrap;
+  }
+
+  .output {
+    margin-top: 10px;
+    background: #eee;
+    padding: 10px;
+    font-family: monospace;
+    white-space: pre-wrap;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>How Text Is Processed by an Algorithm</h1>
+
+<div class="box">
+  <p>
+    In early and non‑AI systems, words and phrases are processed using
+    <strong>explicit text algorithms</strong>.
+    These algorithms do not understand language—they apply fixed rules
+    to characters and words.
+  </p>
+</div>
+
+<div class="box">
+  <h2>Example: Keyword‑Based Text Scoring Algorithm</h2>
+
+  <div class="row">
+
+    <div class="cell">
+      <h3>Input</h3>
+
+      Enter a word or short phrase:
+      <input id="textInput" type="text" value="great opportunity">
+
+      <button id="runTextBtn">Run Text Algorithm</button>
+
+      <div id="textOutput" class="output"></div>
+    </div>
+
+    <div class="cell">
+      <h3>Algorithm (Procedural Form)</h3>
+
+      <pre>
+score = 0
+
+For each word in input:
+  if word is in positive_words:
+      score = score + 1
+  if word is in negative_words:
+      score = score - 1
+
+positive_words = {
+  good, great, success, opportunity
+}
+
+negative_words = {
+  bad, failure, problem, loss
+}
+      </pre>
+    </div>
+
+  </div>
+</div>
+
+<div class="box">
+  <h2>What This Demonstrates</h2>
+  <ul>
+    <li>Text is treated as data, not meaning</li>
+    <li>The algorithm uses exact matching rules</li>
+    <li>Outputs depend entirely on predefined logic</li>
+    <li>Modern AI replaces rules with learned parameters</li>
+  </ul>
+</div>
+
+</div>
+
+<!-- ✅ SCRIPT AT END — DOM IS GUARANTEED TO EXIST -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+  var runButton = document.getElementById("runTextBtn");
+  var inputField = document.getElementById("textInput");
+  var outputBox = document.getElementById("textOutput");
+
+  runButton.addEventListener("click", function () {
+
+    var text = inputField.value.toLowerCase();
+    var words = text.split(" ");
+
+    var positive = ["good", "great", "success", "opportunity"];
+    var negative = ["bad", "failure", "problem", "loss"];
+
+    var score = 0;
+    var i;
+
+    for (i = 0; i < words.length; i++) {
+      if (positive.indexOf(words[i]) !== -1) {
+        score = score + 1;
+      }
+      if (negative.indexOf(words[i]) !== -1) {
+        score = score - 1;
+      }
+    }
+
+    outputBox.innerText =
+      "Processed words:\n" +
+      words.join(", ") + "\n\n" +
+      "Final score: " + score;
+  });
+
+});
+</script>
+
+</body>
+</html>
+``

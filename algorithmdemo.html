@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>What Is an Algorithm?</title>
+
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    padding: 20px;
+  }
+
+  h1, h2, h3 {
+    text-align: center;
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: auto;
+  }
+
+  .box {
+    background: #ffffff;
+    padding: 16px;
+    margin-bottom: 20px;
+    border-radius: 6px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  }
+
+  .grid {
+    display: table;
+    width: 100%;
+  }
+
+  .col {
+    display: table-cell;
+    width: 50%;
+    vertical-align: top;
+    padding: 10px;
+  }
+
+  input {
+    width: 100%;
+    padding: 6px;
+    font-size: 14px;
+    margin-bottom: 8px;
+    font-family: monospace;
+  }
+
+  button {
+    padding: 6px 12px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  pre {
+    background: #eef5ff;
+    padding: 10px;
+    border-left: 4px solid #3b73c4;
+    font-family: monospace;
+    white-space: pre-wrap;
+  }
+
+  .output {
+    background: #eee;
+    padding: 10px;
+    margin-top: 10px;
+    font-family: monospace;
+    white-space: pre-wrap;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>What Is an Algorithm?</h1>
+
+<div class="box">
+  <p>
+    An <strong>algorithm</strong> is a formal, step‑by‑step procedure that
+    transforms inputs into outputs using fixed rules. Algorithms do not
+    think or understand—they execute instructions.
+  </p>
+</div>
+
+<div class="box">
+  <h2>Example A: Scoring Algorithm</h2>
+
+  <div class="grid">
+    <div class="col">
+      <h3>Inputs</h3>
+
+      Experience (years):
+      <input id="expA" type="number" value="4">
+
+      Test Score:
+      <input id="testA" type="number" value="75">
+
+      <button id="runA">Run Scoring Algorithm</button>
+
+      <div class="output" id="outA"></div>
+    </div>
+
+    <div class="col">
+      <h3>Algorithm (Mathematical Form)</h3>
+      <pre>
+score = (experience × w1) + (test_score × w2)
+
+where:
+  w1 = 0.6
+  w2 = 0.4
+      </pre>
+    </div>
+  </div>
+</div>
+
+<div class="box">
+  <h2>Example B: Nearest‑Neighbor Classification</h2>
+
+  <div class="grid">
+    <div class="col">
+      <h3>Inputs</h3>
+
+      Age:
+      <input id="ageB" type="number" value="30">
+
+      Income (thousands):
+      <input id="incomeB" type="number" value="60">
+
+      <button id="runB">Run Classification</button>
+
+      <div class="output" id="outB"></div>
+    </div>
+
+    <div class="col">
+      <h3>Algorithm (Procedural Form)</h3>
+      <pre>
+Given labeled data points
+
+For new input X:
+  1. Compute distance
+  2. Find closest point
+  3. Assign its label
+
+distance = sqrt((x1 − y1)² + (x2 − y2)²)
+      </pre>
+    </div>
+  </div>
+</div>
+
+<div class="box">
+  <h2>Key Takeaways</h2>
+  <ul>
+    <li>The algorithm itself never changes unless we rewrite it: Algorithms are rules, not intelligence</li>
+    <li>Inputs are transformed using these fixed mathematical rules</li>
+    <li>AI systems apply algorithms like this repeatedly and at scale</li>
+  </ul>
+</div>
+
+</div>
+
+<script>
+document.getElementById("runA").onclick = function () {
+  var exp = Number(document.getElementById("expA").value);
+  var test = Number(document.getElementById("testA").value);
+
+  var w1 = 0.6;
+  var w2 = 0.4;
+
+  var score = (exp * w1) + (test * w2);
+
+  document.getElementById("outA").innerText =
+    "score = (" + exp + " × " + w1 + ") + (" +
+    test + " × " + w2 + ")\n" +
+    "score = " + score.toFixed(2);
+};
+
+document.getElementById("runB").onclick = function () {
+  var age = Number(document.getElementById("ageB").value);
+  var income = Number(document.getElementById("incomeB").value);
+
+  var data = [
+    { age: 25, income: 40, label: "Group A" },
+    { age: 45, income: 80, label: "Group B" },
+    { age: 30, income: 55, label: "Group A" }
+  ];
+
+  var min = Infinity;
+  var best = null;
+
+  for (var i = 0; i < data.length; i++) {
+    var d = Math.sqrt(
+      Math.pow(age - data[i].age, 2) +
+      Math.pow(income - data[i].income, 2)
+    );
+    if (d < min) {
+      min = d;
+      best = data[i];
+    }
+  }
+
+  document.getElementById("outB").innerText =
+    "Closest match:\n" +
+    "Age: " + best.age + "\n" +
+    "Income: " + best.income + "\n" +
+    "Assigned label: " + best.label;
+};
+</script>
+
+</body>
+</html>
